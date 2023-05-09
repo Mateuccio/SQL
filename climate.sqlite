@@ -1,0 +1,58 @@
+--Average TEmperature Changes over time in each state
+select state, year, tempc, 
+avg(tempc) over (PARTITION by state order by  year) as running_avg_temp 
+from state_climate;
+
+
+--Lowest temperature for each state
+
+select state, year, tempc, first_value(tempc) over (PARTITION by state order by  year) as lowest_temp
+from state_climate;
+
+--Highest temperature for each state
+
+select state, year, tempc, 
+last_value(tempc) over (PARTITION by state 
+order by year 
+RANGE BETWEEN UNBOUNDED PRECEDING AND 
+      UNBOUNDED FOLLOWING
+) 
+as highest_temp
+from state_climate;
+
+
+--Temperature Changed each year in each state
+
+select state, year, tempc, tempc - LAG(tempc,1,tempc) 
+over (PARTITION by state 
+order by year) as Temperature_Change
+from state_climate
+order by Temperature_Change;
+
+
+--Rank of the coldest temperatures on record
+
+select rank ()
+over (order by tempc asc) as Rank,
+state, year, tempc
+from state_climate;
+
+
+-
+--Rank of the warmest temperatures on record for each state
+
+select rank ()
+over (PARTITION BY state order by tempc desc) as Rank,
+state, year, tempc
+from state_climate;
+
+
+
+--Yearly temperatures in quartiles
+
+
+select NTILE (4)
+over (PARTITION BY state order by tempc) as Quartiles,
+year,state, tempc
+from state_climate
+
